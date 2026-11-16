@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+import {loadConfig} from './config.js';
+import {startApp} from './app.js';
+if(process.argv.slice(2).some(a=>a==='--help'||a==='-h')){console.log('Usage: agent-room-mcp [--host <address>] [--port <number>] [--db <path>]\n\nDefaults: host 127.0.0.1, port 4100, db ./agent-room.db\nEnvironment: AGENT_ROOM_HOST, AGENT_ROOM_PORT, AGENT_ROOM_DB');}else{try{const config=loadConfig(process.argv.slice(2),process.env);const app=await startApp(config);console.log(`agent-room-mcp listening on ${app.url} (db: ${config.dbPath})`);for(const signal of ['SIGINT','SIGTERM'] as const)process.on(signal,()=>{void app.close().then(()=>process.exit(0),e=>{console.error(e);process.exit(1);});});}catch(e){console.error(`agent-room-mcp failed to start: ${(e as Error).message}`);process.exitCode=1;}}

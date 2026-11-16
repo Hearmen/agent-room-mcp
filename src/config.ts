@@ -1,0 +1,3 @@
+import {resolve} from 'node:path';
+export interface Config {host:string;port:number;dbPath:string}
+export function loadConfig(argv:string[],env:NodeJS.ProcessEnv):Config {const v:Record<string,string>={host:env.AGENT_ROOM_HOST??'127.0.0.1',port:env.AGENT_ROOM_PORT??'4100',db:env.AGENT_ROOM_DB??'./agent-room.db'};for(let i=0;i<argv.length;i++){const key=argv[i].slice(2);if(!['--host','--port','--db'].includes(argv[i])||!argv[i+1]||argv[i+1].startsWith('--'))throw new Error(`unknown or incomplete option: ${argv[i]}`);v[key]=argv[++i];}if(!/^\d+$/.test(v.port)||Number(v.port)>65535)throw new Error(`invalid port: ${v.port}`);return {host:v.host,port:Number(v.port),dbPath:resolve(v.db)};}
