@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS facts (
  created_at TEXT NOT NULL,
  updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS room_credentials (
+ token_hash TEXT PRIMARY KEY,
+ room_id INTEGER NOT NULL REFERENCES rooms(room_id) ON DELETE CASCADE
+);
 CREATE INDEX IF NOT EXISTS facts_room_id ON facts(room_id, fact_id);
 ```
 Fact ids are globally allocated and never reused. Every fact lookup, update and delete additionally constrains room_id. The returned object includes the constant type 'fact'; no type column is needed.
@@ -39,3 +43,5 @@ createDb enables foreign_keys and WAL and executes the schema; createTestDb uses
 
 ## Verification
 Test persistence across reopen, foreign-key cascade, transaction rollback, fact timestamps, ordered reads and isolation of fact mutations by room. Fresh databases only; no existing deployed schema migration is specified.
+
+Credential storage: SHA-256 token digests map to room ids in room_credentials. The additive CREATE TABLE migration runs on every database open; existing rooms and facts remain unchanged.

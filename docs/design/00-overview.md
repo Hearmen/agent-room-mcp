@@ -8,8 +8,8 @@ One TypeScript ES module Node.js service uses better-sqlite3, @modelcontextproto
 | storage | SQLite schema and persistence | 01-storage.md |
 | memory | Read all current facts | 02-memory.md |
 | core | Room and fact validation and mutations | 03-core.md |
-| session | Immutable MCP session room binding | 04-identity.md |
-| mcp | Stateful transport and six tools | 05-mcp-tools.md |
+| session | Persistent room credentials | 04-identity.md |
+| mcp | Stateless transport and six tools | 05-mcp-tools.md |
 | runtime | Configuration, HTTP routing, lifecycle | 06-runtime.md |
 | web-api | User JSON API | 07-web-api.md |
 | frontend | User room and fact management | 08-frontend.md |

@@ -1,7 +1,7 @@
-import { requireRoom } from '../core/index.js';
-import type { Database } from '../storage/index.js';
-export interface SessionBinding {roomId:number|null}
+import {randomBytes,createHash} from 'node:crypto';
+import {requireRoom} from '../core/index.js';
+import type {Database} from '../storage/index.js';
 export class SessionError extends Error {}
-export const createBinding=():SessionBinding=>({roomId:null});
-export function selectRoom(db:Database,b:SessionBinding,id:number){if(b.roomId!==null&&b.roomId!==id)throw new SessionError(`session is already bound to room ${b.roomId}`);const room=requireRoom(db,id);b.roomId=id;return room;}
-export function requireBoundRoom(db:Database,b:SessionBinding){if(b.roomId===null)throw new SessionError('select a room first');return requireRoom(db,b.roomId);}
+const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
+export function selectRoom(db:Database,roomId:number){const room=requireRoom(db,roomId);const roomToken=randomBytes(32).toString('base64url');db.prepare('INSERT INTO room_credentials(token_hash,room_id) VALUES(?,?)').run(digest(roomToken),roomId);return {room,roomToken};}
+export function requireTokenRoom(db:Database,token:string){const row=db.prepare('SELECT room_id FROM room_credentials WHERE token_hash=?').get(digest(token)) as {room_id:number}|undefined;if(!row)throw new SessionError('invalid room token');return requireRoom(db,row.room_id);}

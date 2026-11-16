@@ -10,10 +10,8 @@ Fact is the only message type. A fact contains non-empty text describing a break
 
 Users and agents can create, read, update and delete any fact in the accessible room. Updates preserve the fact id and creation time and record an update time. Reads return all current facts in ascending id order. No verdicts, challenges, verification modes, membership or author tokens exist.
 
-## Session boundary
-A session means one initialized MCP Streamable HTTP session. An agent lists rooms and selects one; all fact operations use that binding without a roomId argument. Selection is immutable for the session, including after room deletion. Selecting the same existing room is idempotent; selecting another room fails. A deleted room produces room-not-found errors and does not permit rebinding.
-
-New MCP sessions, including after process restart, require a new selection. The service cannot enforce an agent's identity or a conversation boundary across independent MCP sessions. Clients must reuse one MCP session for one agent work session.
+## Room credential boundary
+select_room returns a persistent roomToken. All fact calls explicitly supply it. One agent work session uses one token by convention; MCP transport sessions do not restrict rooms.
 
 ## Frontend
 The frontend lists rooms and their tasks, creates rooms, and confirms room deletion. Within a room it lists all facts and supports adding, editing and confirmed deletion. It refreshes periodically and after mutations, displays errors, and preserves unsaved edits during refresh. Text is rendered as text rather than trusted HTML.

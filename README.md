@@ -8,7 +8,7 @@
 
 - 用户通过网页创建和删除任务房间。
 - 用户和 Agent 均可新增、读取、修改、删除房间内的 fact。
-- Agent 读取房间列表后选择与任务匹配的房间，一个 MCP session 只能绑定一个房间。
+- Agent 读取房间列表后选择与任务匹配的房间，同一个 Agent 工作会话约定只使用一个房间凭证。
 - 读取返回房间内全部当前 fact，包含完整内容、创建时间和更新时间。
 - 网页每五秒刷新一次，数据持久化到 SQLite 文件。
 
@@ -84,19 +84,16 @@ node dist/main.js --help
 | 工具 | 参数 | 用途 |
 |---|---|---|
 | `list_rooms` | `{}` | 列出房间及任务描述 |
-| `select_room` | `{ "roomId": 1 }` | 绑定当前 session 的唯一房间 |
-| `get_facts` | `{}` | 获取绑定房间内的全部 fact |
-| `add_fact` | `{ "content": "发现内容" }` | 新增 fact |
-| `update_fact` | `{ "factId": 1, "content": "完整替换内容" }` | 修改 fact |
-| `delete_fact` | `{ "factId": 1 }` | 永久删除 fact |
+| `select_room` | `{ "roomId": 1 }` | 获取房间访问凭证 |
+| `get_facts` | `{ "roomToken": "凭证" }` | 获取房间内的全部 fact |
+| `add_fact` | `{ "roomToken": "凭证", "content": "发现内容" }` | 新增 fact |
+| `update_fact` | `{ "roomToken": "凭证", "factId": 1, "content": "完整替换内容" }` | 修改 fact |
+| `delete_fact` | `{ "roomToken": "凭证", "factId": 1 }` | 永久删除 fact |
 
-Fact 操作不接收 `roomId`，服务端从 session 绑定中确定房间。Agent 可以修改或删除绑定房间内的任意 fact。
+Fact 操作不接收 `roomId`，而是显式接收 `roomToken`，服务端据此确定房间。Agent 可以修改或删除绑定房间内的任意 fact。
 
-### Session 约束
-
-这里的 session 是初始化后的 MCP 传输会话。客户端应在同一个 Agent 工作会话内复用它。绑定后不能切换房间；即使绑定房间被删除，也不能重新绑定另一个房间。
-
-服务重启或建立新的 MCP session 后，需要重新选择房间。服务无法跨独立 MCP session 识别同一个 Agent，也不提供跨 session 的身份约束。
+### 房间凭证
+select_room 返回持久化的 roomToken，所有 fact 操作必须显式传递它。重连或重启后仍有效，房间删除后失效。同一个 Agent 工作会话只使用一个凭证是客户端约定，服务端无法识别对话边界。
 
 ### 什么值得写入 fact
 
