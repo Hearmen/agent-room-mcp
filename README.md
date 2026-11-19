@@ -31,6 +31,9 @@ npm start
 - 管理页面：<http://127.0.0.1:4100>
 - MCP 接口：`http://127.0.0.1:4100/mcp`
 - 数据库：当前工作目录下的 `agent-room.db`
+- 登录 token：首次启动自动随机生成，保存在 `agent-room.db.token`（仅文件所有者可读写）。启动日志显示文件路径，使用 `cat agent-room.db.token` 查看，在管理台输入该 token 登录。重启复用原 token，部署时请同时持久化数据库和 token 文件。
+
+轮换 token：停止服务，删除对应 `.token` 文件，再启动即可生成新 token。管理台支持退出登录，登录状态保存在当前标签页的会话存储中。
 
 也可以编译后运行：
 
@@ -65,7 +68,8 @@ node dist/main.js --help
   "mcpServers": {
     "agent-room": {
       "type": "http",
-      "url": "http://127.0.0.1:4100/mcp"
+      "url": "http://127.0.0.1:4100/mcp",
+      "headers": { "Authorization": "Bearer <部署时生成的 token>" }
     }
   }
 }
@@ -93,6 +97,8 @@ node dist/main.js --help
 Fact 操作不接收 `roomId`，而是显式接收 `roomToken`，服务端据此确定房间。Agent 可以修改或删除绑定房间内的任意 fact。
 
 ### 房间凭证
+部署 token 用于 MCP 和管理台入口认证，与 roomToken 不同。所有 MCP 和管理台 API 请求均需要 `Authorization: Bearer <token>`，缺失或错误时返回 HTTP 401。
+
 select_room 返回持久化的 roomToken，所有 fact 操作必须显式传递它。重连或重启后仍有效，房间删除后失效。同一个 Agent 工作会话只使用一个凭证是客户端约定，服务端无法识别对话边界。
 
 ### 什么值得写入 fact
@@ -103,8 +109,8 @@ select_room 返回持久化的 roomToken，所有 fact 操作必须显式传递�
 
 ## 使用注意
 
-- 默认只监听本机回环地址。服务没有用户认证，只有在信任所有可访问客户端的网络中才应对外监听。
-- 用户与 Agent 的权限区别由接口体现，并非针对直接 HTTP 调用者的身份认证边界。
+- 默认只监听本机回环地址。对外部署请通过 HTTPS 反向代理访问，保护请求中的 token；持有部署 token 的客户端具有管理权限。
+- 管理台和 MCP 共用一个部署 token。
 - 删除房间会永久删除全部 fact；删除操作不可撤销。当前不保存历史版本，也没有恢复功能。
 - 并发修改采用最后提交覆盖的方式，更新 fact 时需提交完整内容。
 
